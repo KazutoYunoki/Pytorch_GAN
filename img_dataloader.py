@@ -53,6 +53,7 @@ class GAN_Img_Dataset(data.Dataset):
 
 
 def main():
+
     # ファイルリストを作成
     train_img_list = make_datapath_list()
 
@@ -72,7 +73,7 @@ def main():
 
     batch_iterator = iter(train_dataloader)
     images = next(batch_iterator)
-    print(images.size())
+    print(images.size()[0])
 
 
 if __name__ == "__main__":

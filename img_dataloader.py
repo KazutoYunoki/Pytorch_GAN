@@ -3,6 +3,8 @@ import torch.utils.data as data
 from torchvision import transforms
 from PIL import Image
 
+import pathlib
+
 
 def make_datapath_list():
     """
@@ -10,14 +12,15 @@ def make_datapath_list():
     Returns : list
         画像のファイル名が入ったリスト
     """
+    current_dir = pathlib.Path(__file__).resolve().parent
 
     train_img_list = list()  # 画像ファイルパスを格納
 
     for img_idx in range(200):
-        img_path = "./data/img_78/img_7_" + str(img_idx) + ".jpg"
+        img_path = str(current_dir) + "/data/img_78/img_7_" + str(img_idx) + ".jpg"
         train_img_list.append(img_path)
 
-        img_path = "./data/img_78/img_8_" + str(img_idx) + ".jpg"
+        img_path = str(current_dir) + "/data/img_78/img_8_" + str(img_idx) + ".jpg"
         train_img_list.append(img_path)
 
     return train_img_list
@@ -81,4 +84,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from generator import Generator
 from discriminator import Discriminator
-from img_dataloader import make_datapath_list, ImageTransform, GAN_Img_Dataset
+from img_dataloader import make_datapath_list, ImageTransform, GanImgDataset
 
 import time
 from tqdm import tqdm
@@ -25,7 +25,7 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0)
 
 
-def train_descriminator(D, G, dataloader, num_epochs, criterion, d_optimizer, z_dim):
+def train_descriminator(D, G, dataloader, criterion, d_optimizer, z_dim):
 
     # GPUの初期設定
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -94,7 +94,7 @@ def train_descriminator(D, G, dataloader, num_epochs, criterion, d_optimizer, z_
     return D
 
 
-def train_generator(G, D, dataloader, num_epochs, criterion, g_optimizer, z_dim):
+def train_generator(G, D, dataloader, criterion, g_optimizer, z_dim):
 
     # GPUの初期設定
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -295,7 +295,7 @@ def main():
     mean = (0.5,)
     std = (0.5,)
 
-    train_dataset = GAN_Img_Dataset(
+    train_dataset = GanImgDataset(
         file_list=train_img_list, transform=ImageTransform(mean, std)
     )
     # DataLoaderを作成

@@ -3,7 +3,7 @@ import logging
 import matplotlib.pyplot as plt
 
 import torch
-
+import torch.nn as nn
 from img_dataloader import make_datapath_list, GanImgDataset, ImageTransform
 from generator import Generator
 from discriminator import Discriminator
@@ -40,16 +40,37 @@ def main(cfg):
     # 学習回数を取得
     num_epochs = cfg.train.num_epochs
 
+    # 最適化手法の設定
+    g_optimizer = torch.optim.Adam(
+        G.parameters(), cfg.optimizer.g_lr, [cfg.optimizer.beta1, cfg.optimizer.beta2]
+    )
+    d_optimizer = torch.optim.Adam(
+        D.parameters(), cfg.optimizer.d_lr, [cfg.optimizer.beta1, cfg.optimizer.beta2]
+    )
+
+    # 誤差関数を定義
+    criterion = nn.BCEWithLogitsLoss(reduction="mean")
+
     # 学習・検証を実行
     for epoch in range(num_epochs):
         print("----------")
-        print("Epoch {} / {}".format(epoch, num_epochs))
+        print("Epoch {} / {}".format(epoch + 1, num_epochs))
 
         D_update = train_descriminator(
-            D, G, dataloader=train_dataloader, num_epochs=num_epochs
+            D,
+            G,
+            dataloader=train_dataloader,
+            criterion=criterion,
+            d_optimizer=d_optimizer,
+            z_dim=cfg.input.z_dim,
         )
         G_update = train_generator(
-            G, D, dataloader=train_dataloader, num_epochs=num_epochs
+            G,
+            D,
+            dataloader=train_dataloader,
+            criterion=criterion,
+            g_optimizer=g_optimizer,
+            z_dim=cfg.input.z_dim,
         )
 
     # 生成画像と訓練データを可視化する

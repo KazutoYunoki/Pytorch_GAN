@@ -25,6 +25,132 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0)
 
 
+def train_descriminator(D, G, dataloader, num_epochs, criterion, d_optimizer, z_dim):
+
+    # GPUの初期設定
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print("使用デバイス", device)
+
+    # ネットワークをGPUへ
+    D.to(device)
+    G.to(device)
+
+    D.train()  # 訓練モードに
+    G.train()
+
+    torch.backends.cudnn.benchmark = True
+
+    # 開始時刻を保存
+    t_epoch_start = time.time()
+    epoch_d_loss = 0.0  # epochの損失和
+
+    # 画像のバッチサイズ
+    batch_size = dataloader.batch_size
+
+    for images in tqdm(dataloader, leave=False):
+        # Discriminatorの学習
+        # ミニバッチが1だと、BatchNormalizationでエラーなので避ける
+
+        if images.size()[0] == 1:
+            continue
+
+        # GPUにデータを送信
+        images = images.to(device)
+
+        # 正解ラベルと偽ラベルを作成
+        mini_batch_size = images.size()[0]  # 1次元目のバッチサイズを取得
+        label_real = torch.full((mini_batch_size,), 1).to(device)
+        label_fake = torch.full((mini_batch_size,), 0).to(device)
+
+        # 真の画像を判定
+        d_out_real = D(images)
+
+        # 偽の画像を生成して判定
+        input_z = torch.randn(mini_batch_size, z_dim).to(device)
+        input_z = input_z.view(input_z.size(0), input_z.size(1), 1, 1)
+        fake_images = G(input_z)
+        d_out_fake = D(fake_images)
+
+        # 誤差を計算
+        d_loss_real = criterion(d_out_real.view(-1), label_real)
+        d_loss_fake = criterion(d_out_fake.view(-1), label_fake)
+        d_loss = d_loss_real + d_loss_fake
+
+        # BP
+        d_optimizer.zero_grad()  # 勾配初期化
+
+        d_loss.backward()  # 誤差逆伝播
+        d_optimizer.step()  # 勾配更新
+
+        # 記録
+        epoch_d_loss += d_loss.item()
+
+    # loss
+    t_epoch_finish = time.time()
+    print("----------")
+    print("Epoch_D_Loss:{:.4f}".format(epoch_d_loss / batch_size))
+    print("timer:{:.4f} sec.".format(t_epoch_finish - t_epoch_start))
+
+    return D
+
+
+def train_generator(G, D, dataloader, num_epochs, criterion, g_optimizer, z_dim):
+
+    # GPUの初期設定
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    # ネットワークをGPUへ
+    G.to(device)
+    D.to(device)
+
+    G.train()  # 訓練モードに
+    D.to(device)
+
+    torch.backends.cudnn.benchmark = True
+
+    # 開始時刻を保存
+    t_epoch_start = time.time()
+    epoch_g_loss = 0.0  # epochの損失和
+
+    # 画像のバッチサイズ
+    batch_size = dataloader.batch_size
+
+    for images in tqdm(dataloader, leave=False):
+
+        if images.size()[0] == 1:
+            continue
+
+        mini_batch_size = images.size()[0]  # 1次元目のバッチサイズを取得
+
+        # GPUが使えるならGPUにデータを送る
+        images = images.to(device)
+
+        label_real = torch.full((mini_batch_size,), 1).to(device)
+
+        input_z = torch.randn(mini_batch_size, z_dim).to(device)
+        input_z = input_z.view(input_z.size(0), input_z.size(1), 1, 1)
+        fake_images = G(input_z)
+        d_out_fake = D(fake_images)
+
+        # 誤差を計算
+        g_loss = criterion(d_out_fake.view(-1), label_real)
+
+        # BP
+        g_optimizer.zero_grad()
+        g_loss.backward()
+        g_optimizer.step()
+
+        # 記録
+        epoch_g_loss += g_loss.item()
+
+    # loss
+    t_epoch_finish = time.time()
+    print("----------")
+    print("Epoch_G_Loss:{:.4f}".format(epoch_g_loss / batch_size))
+    print("timer: {:.4f} sec.".format(t_epoch_finish - t_epoch_start))
+
+    return G
+
+
 def train_model(G, D, dataloader, num_epochs):
     """
     モデルを学習させる関数

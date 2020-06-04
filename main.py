@@ -92,11 +92,11 @@ def main(cfg):
 
     for i in range(0, 5):
         # 上段に訓練データ
-        fig.subplot(2, 5, i + 1)
-        fig.imshow(images[i][0].cpu().detach().numpy(), "gray")
+        ax = fig.add_subplot(2, 5, i + 1)
+        ax.imshow(images[i][0].cpu().detach().numpy(), "gray")
 
-        fig.subplot(2, 5, 5 + i + 1)
-        fig.imshow(fake_images[i][0].cpu().detach().numpy(), "gray")
+        ax = fig.add_subplot(2, 5, 5 + i + 1)
+        ax.imshow(fake_images[i][0].cpu().detach().numpy(), "gray")
 
     fig.savefig("generate_image")
 

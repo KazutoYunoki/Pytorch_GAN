@@ -1,0 +1,21 @@
+image:
+  mean:
+    - 0.5
+  std:
+    - 0.5
+  batch_size: 64
+  size: 64
+
+input:
+  batch_size: 8
+  z_dim: 20
+
+train:
+  num_epochs: 200
+
+optimizer:
+  algorithm: Adam
+  g_lr: 0.0001
+  d_lr: 0.0004
+  beta1: 0.0
+  beta2: 0.9

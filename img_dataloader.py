@@ -3,17 +3,24 @@ import torch.utils.data as data
 from torchvision import transforms
 from PIL import Image
 
+import pathlib
+
 
 def make_datapath_list():
-    # "学習、検証の画像データとアノテーションデータへのファイルパスリストを作成する。
+    """
+    学習、検証の画像データとアノテーションデータへのファイルパスリストを作成する.
+    Returns : list
+        画像のファイル名が入ったリスト
+    """
+    current_dir = pathlib.Path(__file__).resolve().parent
 
     train_img_list = list()  # 画像ファイルパスを格納
 
     for img_idx in range(200):
-        img_path = "./data/img_78/img_7_" + str(img_idx) + ".jpg"
+        img_path = str(current_dir) + "/data/img_78/img_7_" + str(img_idx) + ".jpg"
         train_img_list.append(img_path)
 
-        img_path = "./data/img_78/img_8_" + str(img_idx) + ".jpg"
+        img_path = str(current_dir) + "/data/img_78/img_8_" + str(img_idx) + ".jpg"
         train_img_list.append(img_path)
 
     return train_img_list
@@ -31,7 +38,7 @@ class ImageTransform:
         return self.data_transform(img)
 
 
-class GAN_Img_Dataset(data.Dataset):
+class GanImgDataset(data.Dataset):
     def __init__(self, file_list, transform):
         self.file_list = file_list
         self.transform = transform
@@ -61,7 +68,7 @@ def main():
     mean = (0.5,)
     std = (0.5,)
 
-    train_dataset = GAN_Img_Dataset(
+    train_dataset = GanImgDataset(
         file_list=train_img_list, transform=ImageTransform(mean, std)
     )
     # DataLoaderを作成
@@ -77,4 +84,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()

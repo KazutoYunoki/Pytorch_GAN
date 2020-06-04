@@ -1,5 +1,6 @@
 import hydra
 import logging
+import matplotlib.pyplot as plt
 
 import torch
 
@@ -65,16 +66,19 @@ def main(cfg):
     batch__iterator = iter(train_dataloader)
     images = next(batch__iterator)
 
-    #出力
-    fig = plt.figure(figsize=(15,6))
+    # 出力
+    fig = plt.figure(figsize=(15, 6))
 
-    for i range(0, 5):
-        #上段に訓練データ
-        fig.subplot(2, 5, i +1)
+    for i in range(0, 5):
+        # 上段に訓練データ
+        fig.subplot(2, 5, i + 1)
         fig.imshow(images[i][0].cpu().detach().numpy(), "gray")
 
         fig.subplot(2, 5, 5 + i + 1)
         fig.imshow(fake_images[i][0].cpu().detach().numpy(), "gray")
+
+    fig.savefig("generate_image")
+
 
 if __name__ == "__main__":
     main()

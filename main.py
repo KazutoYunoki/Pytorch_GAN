@@ -30,12 +30,16 @@ def main(cfg):
         train_dataset, batch_size=cfg.image.batch_size, shuffle=True
     )
 
-    G = Generator(z_dim=cfg.input.z_dim, image_size=cfg.image.size)
-    D = Discriminator(z_dim=cfg.input.z_dim, image_size=cfg.image.size)
+    G = Generator(z_dim=cfg.input.z_dim, image_size=cfg.image.size, nc=1)
+    D = Discriminator(z_dim=cfg.input.z_dim, image_size=cfg.image.size, nc=1)
 
     # torch.nn.Moduleの関数apply パラメータの重みを初期化
     G.apply(weights_init)
     D.apply(weights_init)
+
+    # ネットワークの表示
+    log.info(G)
+    log.info(D)
 
     # 学習回数を取得
     num_epochs = cfg.train.num_epochs
@@ -51,12 +55,16 @@ def main(cfg):
     # 誤差関数を定義
     criterion = nn.BCEWithLogitsLoss(reduction="mean")
 
+    # d_lossとg_lossの損失値を保存しておくリスト
+    d_loss_list = []
+    g_loss_list = []
+
     # 学習・検証を実行
     for epoch in range(num_epochs):
         print("----------")
         print("Epoch {} / {}".format(epoch + 1, num_epochs))
 
-        D_update = train_descriminator(
+        D_update, d_loss = train_descriminator(
             D,
             G,
             dataloader=train_dataloader,
@@ -64,7 +72,8 @@ def main(cfg):
             d_optimizer=d_optimizer,
             z_dim=cfg.input.z_dim,
         )
-        G_update = train_generator(
+        d_loss_list.append(d_loss)
+        G_update, g_loss = train_generator(
             G,
             D,
             dataloader=train_dataloader,
@@ -72,6 +81,15 @@ def main(cfg):
             g_optimizer=g_optimizer,
             z_dim=cfg.input.z_dim,
         )
+        g_loss_list.append(g_loss)
+
+    # figインスタンスとaxインスタンスを作成
+    fig_loss, ax_loss = plt.subplots(figsize=(10, 10))
+    ax_loss.plot(range(1, num_epochs + 1, 1), d_loss_list, label="discriminator_loss")
+    ax_loss.plot(range(1, num_epochs + 1, 1), g_loss_list, label="generator_loss")
+    ax_loss.set_xlabel("epoch")
+    ax_loss.legend()
+    fig_loss.savefig("loss.png")
 
     # 生成画像と訓練データを可視化する
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

@@ -91,7 +91,7 @@ def train_descriminator(D, G, dataloader, criterion, d_optimizer, z_dim):
     print("Epoch_D_Loss:{:.4f}".format(epoch_d_loss / batch_size))
     print("timer:{:.4f} sec.".format(t_epoch_finish - t_epoch_start))
 
-    return D
+    return D, epoch_d_loss / batch_size
 
 
 def train_generator(G, D, dataloader, criterion, g_optimizer, z_dim):
@@ -148,7 +148,7 @@ def train_generator(G, D, dataloader, criterion, g_optimizer, z_dim):
     print("Epoch_G_Loss:{:.4f}".format(epoch_g_loss / batch_size))
     print("timer: {:.4f} sec.".format(t_epoch_finish - t_epoch_start))
 
-    return G
+    return G, epoch_g_loss / batch_size
 
 
 def train_model(G, D, dataloader, num_epochs):

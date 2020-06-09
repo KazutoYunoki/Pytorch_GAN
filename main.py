@@ -17,12 +17,12 @@ log = logging.getLogger(__name__)
 @hydra.main(config_path="conf/config.yaml")
 def main(cfg):
     # ファイルリストを作成
-    train_img_list = make_datapath_list()
+    train_img_list = make_datapath_list(cfg.data.dir)
 
     # データセットを作成
     train_dataset = GanImgDataset(
         file_list=train_img_list,
-        transform=ImageTransform(cfg.image.mean, cfg.image.std),
+        transform=ImageTransform(cfg.image.size, cfg.image.mean, cfg.image.std),
     )
 
     # データローダを作成
@@ -30,8 +30,12 @@ def main(cfg):
         train_dataset, batch_size=cfg.image.batch_size, shuffle=True
     )
 
-    G = Generator(z_dim=cfg.input.z_dim, image_size=cfg.image.size, nc=1)
-    D = Discriminator(z_dim=cfg.input.z_dim, image_size=cfg.image.size, nc=1)
+    G = Generator(
+        z_dim=cfg.input.z_dim, image_size=cfg.image.size, nc=cfg.image.channel
+    )
+    D = Discriminator(
+        z_dim=cfg.input.z_dim, image_size=cfg.image.size, nc=cfg.image.channel
+    )
 
     # torch.nn.Moduleの関数apply パラメータの重みを初期化
     G.apply(weights_init)

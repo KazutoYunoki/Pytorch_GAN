@@ -3,10 +3,12 @@ import torch.utils.data as data
 from torchvision import transforms
 from PIL import Image
 
+import os.path as osp
 import pathlib
+import glob
 
 
-def make_datapath_list():
+def make_datapath_list(data_dir):
     """
     学習、検証の画像データとアノテーションデータへのファイルパスリストを作成する.
     Returns : list
@@ -14,24 +16,30 @@ def make_datapath_list():
     """
     current_dir = pathlib.Path(__file__).resolve().parent
 
-    train_img_list = list()  # 画像ファイルパスを格納
+    target_path = osp.join(str(current_dir) + "/data/" + data_dir + "/**/**/*.jpg")
+    print(target_path)
 
-    for img_idx in range(200):
-        img_path = str(current_dir) + "/data/img_78/img_7_" + str(img_idx) + ".jpg"
-        train_img_list.append(img_path)
+    path_list = []
 
-        img_path = str(current_dir) + "/data/img_78/img_8_" + str(img_idx) + ".jpg"
-        train_img_list.append(img_path)
+    for path in glob.glob(target_path):
+        path_list.append(path)
 
-    return train_img_list
+    print(len(path_list))
+
+    return path_list
 
 
 class ImageTransform:
     # 画像の前処理クラス
 
-    def __init__(self, mean, std):
+    def __init__(self, resize, mean, std):
         self.data_transform = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize(mean, std)]
+            [
+                transforms.Resize(resize),
+                transforms.CenterCrop(resize),
+                transforms.ToTensor(),
+                transforms.Normalize(mean, std),
+            ]
         )
 
     def __call__(self, img):
@@ -62,17 +70,18 @@ class GanImgDataset(data.Dataset):
 def main():
 
     # ファイルリストを作成
-    train_img_list = make_datapath_list()
+    train_img_list = make_datapath_list("cat_dog")
 
     # Datasetを作成
-    mean = (0.5,)
-    std = (0.5,)
+    size = 224
+    mean = (0.458, 0.456, 0.406)
+    std = (0.229, 0.224, 0.225)
 
     train_dataset = GanImgDataset(
-        file_list=train_img_list, transform=ImageTransform(mean, std)
+        file_list=train_img_list, transform=ImageTransform(size, mean, std)
     )
     # DataLoaderを作成
-    batch_size = 64
+    batch_size = 32
 
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True

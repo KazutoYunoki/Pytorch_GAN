@@ -1,14 +1,25 @@
 image:
+  size: 64
+
   mean:
+    - 0.5
+    - 0.5
     - 0.5
   std:
     - 0.5
-  batch_size: 64
-  size: 64
+    - 0.5
+    - 0.5
+  
+  channel: 3
+
+  batch_size: 32
+
+data:
+  dir: cat_dog
 
 input:
   batch_size: 8
-  z_dim: 100
+  z_dim: 10
 
 train:
   num_epochs: 200

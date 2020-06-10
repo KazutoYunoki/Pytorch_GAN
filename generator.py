@@ -70,9 +70,13 @@ def main():
     # 偽画像を出力
     fake_images = G(input_z)
 
-    img_transformed = fake_images[0][0].detach().numpy()
-    plt.imshow(img_transformed, "gray")
+    img_transformed = fake_images[0].detach().numpy().transpose((1, 2, 0))
+    # img_transformed = img_transformed.transpose((1, 2, 0))
+    print(img_transformed.shape)
+    print(type(img_transformed))
+    plt.imshow(img_transformed)
     plt.show()
+    plt.savefig("test")
 
 
 if __name__ == "__main__":

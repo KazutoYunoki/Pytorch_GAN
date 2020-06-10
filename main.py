@@ -115,10 +115,14 @@ def main(cfg):
     for i in range(0, 5):
         # 上段に訓練データ
         ax = fig.add_subplot(2, 5, i + 1)
-        ax.imshow(images[i][0].cpu().detach().numpy(), "gray")
+        img = images[i].cpu().detach().numpy().transpose((1, 2, 0))
+        img = img / 2 + 0.5
+        ax.imshow(img)
 
         ax = fig.add_subplot(2, 5, 5 + i + 1)
-        ax.imshow(fake_images[i][0].cpu().detach().numpy(), "gray")
+        fake = fake_images[i].cpu().detach().numpy().transpose((1, 2, 0))
+        fake = fake / 2 + 0.5
+        ax.imshow(fake)
 
     fig.savefig("generate_image")
 

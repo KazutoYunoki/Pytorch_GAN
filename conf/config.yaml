@@ -19,7 +19,7 @@ data:
 
 input:
   batch_size: 8
-  z_dim: 10
+  z_dim: 100
 
 train:
   num_epochs: 200

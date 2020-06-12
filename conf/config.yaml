@@ -3,14 +3,11 @@ image:
 
   mean:
     - 0.5
-    - 0.5
-    - 0.5
   std:
     - 0.5
-    - 0.5
-    - 0.5
   
-  channel: 3
+  
+  channel: 1
 
   batch_size: 32
 

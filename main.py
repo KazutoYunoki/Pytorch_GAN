@@ -4,11 +4,15 @@ import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
-from img_dataloader import make_datapath_list, GanImgDataset, ImageTransform
+from img_dataloader import (
+    make_datapath_list,
+    GanImgDataset,
+    ImageTransform,
+    make_datapath_mnist,
+)
 from generator import Generator
 from discriminator import Discriminator
-from network_model import weights_init, train_descriminator, train_generator
-
+from network_model import weights_init, train_model
 
 # A logger for this file
 log = logging.getLogger(__name__)
@@ -17,7 +21,9 @@ log = logging.getLogger(__name__)
 @hydra.main(config_path="conf/config.yaml")
 def main(cfg):
     # ファイルリストを作成
-    train_img_list = make_datapath_list(cfg.data.dir)
+    # train_img_list = make_datapath_list(cfg.data.dir)
+
+    train_img_list = make_datapath_mnist()
 
     # データセットを作成
     train_dataset = GanImgDataset(
@@ -68,23 +74,16 @@ def main(cfg):
         print("----------")
         print("Epoch {} / {}".format(epoch + 1, num_epochs))
 
-        D_update, d_loss = train_descriminator(
-            D,
+        G_update, D_update, g_loss, d_loss = train_model(
             G,
+            D,
             dataloader=train_dataloader,
             criterion=criterion,
             d_optimizer=d_optimizer,
-            z_dim=cfg.input.z_dim,
-        )
-        d_loss_list.append(d_loss)
-        G_update, g_loss = train_generator(
-            G,
-            D,
-            dataloader=train_dataloader,
-            criterion=criterion,
             g_optimizer=g_optimizer,
             z_dim=cfg.input.z_dim,
         )
+        d_loss_list.append(d_loss)
         g_loss_list.append(g_loss)
 
     # figインスタンスとaxインスタンスを作成
@@ -112,6 +111,8 @@ def main(cfg):
     # 出力
     fig = plt.figure(figsize=(15, 6))
 
+    # カラー画像用↓
+    """
     for i in range(0, 5):
         # 上段に訓練データ
         ax = fig.add_subplot(2, 5, i + 1)
@@ -123,6 +124,18 @@ def main(cfg):
         fake = fake_images[i].cpu().detach().numpy().transpose((1, 2, 0))
         fake = fake / 2 + 0.5
         ax.imshow(fake)
+
+    fig.savefig("generate_image")
+    """
+    for i in range(0, 5):
+        # 上段に訓練データ
+        ax = fig.add_subplot(2, 5, i + 1)
+        img = images[i][0].cpu().detach().numpy()
+        ax.imshow(img, "gray")
+
+        ax = fig.add_subplot(2, 5, 5 + i + 1)
+        fake = fake_images[i][0].cpu().detach().numpy()
+        ax.imshow(fake, "gray")
 
     fig.savefig("generate_image")
 

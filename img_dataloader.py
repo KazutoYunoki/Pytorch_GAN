@@ -8,6 +8,23 @@ import pathlib
 import glob
 
 
+def make_datapath_mnist():
+    """学習、検証の画像データとアノテーションデータへのファイルパスリストを作成する。 """
+
+    train_img_list = list()  # 画像ファイルパスを格納
+
+    current_dir = pathlib.Path(__file__).resolve().parent
+
+    for img_idx in range(200):
+        img_path = str(current_dir) + "/data/img_78/img_7_" + str(img_idx) + ".jpg"
+        train_img_list.append(img_path)
+
+        img_path = str(current_dir) + "/data/img_78/img_8_" + str(img_idx) + ".jpg"
+        train_img_list.append(img_path)
+
+    return train_img_list
+
+
 def make_datapath_list(data_dir):
     """
     学習、検証の画像データとアノテーションデータへのファイルパスリストを作成する.

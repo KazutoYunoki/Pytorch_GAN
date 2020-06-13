@@ -7,6 +7,7 @@ from img_dataloader import make_datapath_list, ImageTransform, GanImgDataset
 import time
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import torchvision.utils as vutils
 
 
 def weights_init(m):
@@ -18,7 +19,6 @@ def weights_init(m):
     if classname.find("Conv") != -1:
         # Conv2dとConvTranspose2dの初期化
         nn.init.normal_(m.weight.data, 0.0, 0.02)  # 転置畳み込みと畳み込み層の重みは平均0、標準偏差0.02の正規分布
-        nn.init.constant_(m.bias.data, 0)
     elif classname.find("BatchNorm") != -1:
         # BatchNorm2dの初期化
         nn.init.normal_(m.weight.data, 1.0, 0.02)  # 重みは平均1、標準偏差0.02、の正規分布
@@ -53,6 +53,10 @@ def train_model(G, D, dataloader, criterion, d_optimizer, g_optimizer, z_dim):
 
     # 画像のバッチサイズ
     batch_size = dataloader.batch_size
+
+    # イテレータ
+    iters = 0
+    img_list = []
 
     for imges in tqdm(dataloader, leave=False):
         # 1.Discriminatorの学習
@@ -99,6 +103,12 @@ def train_model(G, D, dataloader, criterion, d_optimizer, g_optimizer, z_dim):
         epoch_d_loss += d_loss.item()
         epoch_g_loss += g_loss.item()
 
+        if iters % 1 == 0:
+            with torch.no_grad():
+                fake = G(input_z).detach().cpu()
+            img_list.append(vutils.make_grid(fake, padding=2, normalize=True))
+
+        iters += 1
     # epochのphaseごとのlossと正解率
     t_epoch_finish = time.time()
     print("----------")
@@ -109,7 +119,7 @@ def train_model(G, D, dataloader, criterion, d_optimizer, g_optimizer, z_dim):
     )
     print("timer: {:.4f} sec.".format(t_epoch_finish - t_epoch_start))
     t_epoch_start = time.time()
-    return G, D, epoch_g_loss / batch_size, epoch_d_loss / batch_size
+    return G, D, epoch_g_loss / batch_size, epoch_d_loss / batch_size, img_list
 
 
 def main():

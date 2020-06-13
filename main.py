@@ -4,15 +4,21 @@ import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
+import torchvision.utils as vutils
+
 from img_dataloader import (
     make_datapath_list,
     GanImgDataset,
     ImageTransform,
     make_datapath_mnist,
 )
+
 from generator import Generator
 from discriminator import Discriminator
 from network_model import weights_init, train_model
+
+
+import numpy as np
 
 # A logger for this file
 log = logging.getLogger(__name__)
@@ -21,9 +27,9 @@ log = logging.getLogger(__name__)
 @hydra.main(config_path="conf/config.yaml")
 def main(cfg):
     # ファイルリストを作成
-    # train_img_list = make_datapath_list(cfg.data.dir)
+    train_img_list = make_datapath_list(cfg.data.dir)
 
-    train_img_list = make_datapath_mnist()
+    # train_img_list = make_datapath_mnist()
 
     # データセットを作成
     train_dataset = GanImgDataset(
@@ -74,7 +80,7 @@ def main(cfg):
         print("----------")
         print("Epoch {} / {}".format(epoch + 1, num_epochs))
 
-        G_update, D_update, g_loss, d_loss = train_model(
+        G_update, D_update, g_loss, d_loss, img_list = train_model(
             G,
             D,
             dataloader=train_dataloader,
@@ -112,7 +118,6 @@ def main(cfg):
     fig = plt.figure(figsize=(15, 6))
 
     # カラー画像用↓
-    """
     for i in range(0, 5):
         # 上段に訓練データ
         ax = fig.add_subplot(2, 5, i + 1)
@@ -127,6 +132,7 @@ def main(cfg):
 
     fig.savefig("generate_image")
     """
+    # 白黒画像用
     for i in range(0, 5):
         # 上段に訓練データ
         ax = fig.add_subplot(2, 5, i + 1)
@@ -138,6 +144,35 @@ def main(cfg):
         ax.imshow(fake, "gray")
 
     fig.savefig("generate_image")
+    """
+
+    # Grab a batch of real images from the dataloader
+    real_batch = next(iter(train_dataloader))
+
+    # Plot the real images
+    # Plot the real images
+
+    plt.figure(figsize=(15, 15))
+    plt.subplot(1, 2, 1)
+    plt.axis("off")
+    plt.title("Real Images")
+    plt.imshow(
+        np.transpose(
+            vutils.make_grid(
+                real_batch[0].to(device)[:64], padding=5, normalize=True
+            ).cpu(),
+            (1, 2, 0),
+        )
+    )
+
+    # Plot the fake images from the last epoch
+    plt.subplot(1, 2, 2)
+    plt.axis("off")
+    plt.title("Fake Images")
+    plt.imshow(np.transpose(img_list[-1], (1, 2, 0)))
+    plt.show()
+
+    plt.savefig("result_img")
 
 
 if __name__ == "__main__":

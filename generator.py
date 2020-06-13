@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 
 
 class Generator(nn.Module):
-    def __init__(self, z_dim=100, image_size=64, nc=3):
+    def __init__(self, z_dim, image_size, nc):
         super(Generator, self).__init__()
 
         self.layer1 = nn.Sequential(
             # ConvTranspose2d(入力チャンネル, 出力チャンネル数, カーネルサイズ, パディング)
             nn.ConvTranspose2d(
-                z_dim, image_size * 8, kernel_size=4, stride=1, padding=0
+                z_dim, image_size * 8, kernel_size=4, stride=1, padding=0, bias=False
             ),
             nn.BatchNorm2d(image_size * 8),
             nn.ReLU(inplace=True),
@@ -19,7 +19,12 @@ class Generator(nn.Module):
 
         self.layer2 = nn.Sequential(
             nn.ConvTranspose2d(
-                image_size * 8, image_size * 4, kernel_size=4, stride=2, padding=1,
+                image_size * 8,
+                image_size * 4,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+                bias=False,
             ),
             nn.BatchNorm2d(image_size * 4),
             nn.ReLU(inplace=True),
@@ -27,7 +32,12 @@ class Generator(nn.Module):
 
         self.layer3 = nn.Sequential(
             nn.ConvTranspose2d(
-                image_size * 4, image_size * 2, kernel_size=4, stride=2, padding=1,
+                image_size * 4,
+                image_size * 2,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+                bias=False,
             ),
             nn.BatchNorm2d(image_size * 2),
             nn.ReLU(inplace=True),
@@ -35,14 +45,21 @@ class Generator(nn.Module):
 
         self.layer4 = nn.Sequential(
             nn.ConvTranspose2d(
-                image_size * 2, image_size * 1, kernel_size=4, stride=2, padding=1,
+                image_size * 2,
+                image_size * 1,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+                bias=False,
             ),
             nn.BatchNorm2d(image_size),
             nn.ReLU(inplace=True),
         )
 
         self.last = nn.Sequential(
-            nn.ConvTranspose2d(image_size, nc, kernel_size=4, stride=2, padding=1),
+            nn.ConvTranspose2d(
+                image_size, nc, kernel_size=4, stride=2, padding=1, bias=False
+            ),
             nn.Tanh(),
         )
 

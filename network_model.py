@@ -103,7 +103,7 @@ def train_model(G, D, dataloader, criterion, d_optimizer, g_optimizer, z_dim):
         epoch_d_loss += d_loss.item()
         epoch_g_loss += g_loss.item()
 
-        if iters % 1 == 0:
+        if iters % 200 == 0:
             with torch.no_grad():
                 fake = G(input_z).detach().cpu()
             img_list.append(vutils.make_grid(fake, padding=2, normalize=True))

@@ -16,6 +16,7 @@ from img_dataloader import (
 from generator import Generator
 from discriminator import Discriminator
 from network_model import weights_init, train_model
+from create_figure import create_fig
 
 
 import numpy as np
@@ -26,6 +27,9 @@ log = logging.getLogger(__name__)
 
 @hydra.main(config_path="conf/config.yaml")
 def main(cfg):
+    # 生成画像と訓練データを可視化する
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     # ファイルリストを作成
     train_img_list = make_datapath_list(cfg.data.dir)
 
@@ -92,6 +96,11 @@ def main(cfg):
         d_loss_list.append(d_loss)
         g_loss_list.append(g_loss)
 
+        if epoch % 200 == 0:
+            create_fig(
+                cfg.input.batch_size, cfg.input.z_dim, G_update, train_dataloader, epoch
+            )
+
     # figインスタンスとaxインスタンスを作成
     fig_loss, ax_loss = plt.subplots(figsize=(10, 10))
     ax_loss.plot(range(1, num_epochs + 1, 1), d_loss_list, label="discriminator_loss")
@@ -100,37 +109,6 @@ def main(cfg):
     ax_loss.legend()
     fig_loss.savefig("loss.png")
 
-    # 生成画像と訓練データを可視化する
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-    # 入力乱数生成
-    fixed_z = torch.randn(cfg.input.batch_size, cfg.input.z_dim)
-    fixed_z = fixed_z.view(fixed_z.size(0), fixed_z.size(1), 1, 1)
-
-    # 画像生成
-    fake_images = G_update(fixed_z.to(device))
-
-    # 訓練データ
-    batch__iterator = iter(train_dataloader)
-    images = next(batch__iterator)
-
-    # 出力
-    fig = plt.figure(figsize=(15, 6))
-
-    # カラー画像用↓
-    for i in range(0, 5):
-        # 上段に訓練データ
-        ax = fig.add_subplot(2, 5, i + 1)
-        img = images[i].cpu().detach().numpy().transpose((1, 2, 0))
-        img = img / 2 + 0.5
-        ax.imshow(img)
-
-        ax = fig.add_subplot(2, 5, 5 + i + 1)
-        fake = fake_images[i].cpu().detach().numpy().transpose((1, 2, 0))
-        fake = fake / 2 + 0.5
-        ax.imshow(fake)
-
-    fig.savefig("generate_image")
     """
     # 白黒画像用
     for i in range(0, 5):

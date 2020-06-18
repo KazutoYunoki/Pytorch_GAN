@@ -7,18 +7,15 @@ import torch.nn as nn
 import torch.nn.parallel
 import torch.optim as optim
 import torch.utils.data
-import torchvision.datasets as dset
-import torchvision.transforms as transforms
 import torchvision.utils as vutils
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 import hydra
-import pathlib
-
 from generator import Generator
 from discriminator import Discriminator
+from dataset import make_dataset
 
 
 # GeneratorとDiscriminatorの重みの初期化
@@ -43,21 +40,8 @@ def main(cfg):
     random.seed(manualSeed)
     torch.manual_seed(manualSeed)
 
-    current_dir = pathlib.Path(__file__).resolve().parent
-    print(current_dir)
-
-    # データセットの作成
-    dataset = dset.ImageFolder(
-        root=str(current_dir) + cfg.dataroot,
-        transform=transforms.Compose(
-            [
-                transforms.Resize(cfg.image_size),
-                transforms.CenterCrop(cfg.image_size),
-                transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-            ]
-        ),
-    )
+    # datsetの作成
+    dataset = make_dataset(cfg.dataroot, cfg.image_size)
 
     # データローダの作成
     dataloader = torch.utils.data.DataLoader(

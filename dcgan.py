@@ -44,6 +44,7 @@ def main(cfg):
     torch.manual_seed(manualSeed)
 
     current_dir = pathlib.Path(__file__).resolve().parent
+    print(current_dir)
 
     # データセットの作成
     dataset = dset.ImageFolder(

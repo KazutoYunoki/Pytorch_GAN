@@ -1,100 +1,36 @@
-import torch
+# Generator Code
 import torch.nn as nn
-
-import matplotlib.pyplot as plt
 
 
 class Generator(nn.Module):
-    def __init__(self, z_dim, image_size, nc):
+    def __init__(self, ngpu, nz, ngf, nc):
         super(Generator, self).__init__()
-
-        self.layer1 = nn.Sequential(
-            # ConvTranspose2d(入力チャンネル, 出力チャンネル数, カーネルサイズ, パディング)
-            nn.ConvTranspose2d(
-                z_dim, image_size * 8, kernel_size=4, stride=1, padding=0, bias=False
-            ),
-            nn.BatchNorm2d(image_size * 8),
-            nn.ReLU(inplace=True),
+        self.ngpu = ngpu
+        self.nz = nz
+        self.ngf = ngf
+        self.nc = nc
+        self.main = nn.Sequential(
+            # 入力Zを畳み込み層へ
+            nn.ConvTranspose2d(self.nz, self.ngf * 8, 4, 1, 0, bias=False),
+            nn.BatchNorm2d(self.ngf * 8),
+            nn.ReLU(True),
+            # state size (self.ngf*8) * 4 * 4
+            nn.ConvTranspose2d(self.ngf * 8, self.ngf * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(self.ngf * 4),
+            nn.ReLU(True),
+            # state size. (self.ngf*4) x 8 x 8
+            nn.ConvTranspose2d(self.ngf * 4, self.ngf * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(self.ngf * 2),
+            nn.ReLU(True),
+            # state size. (self.ngf*2) x 16 x 16
+            nn.ConvTranspose2d(self.ngf * 2, self.ngf, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(self.ngf),
+            nn.ReLU(True),
+            # state size. (self.ngf) x 32 x 32
+            nn.ConvTranspose2d(self.ngf, self.nc, 4, 2, 1, bias=False),
+            nn.Tanh()
+            # state size. (nc) x 64 x 64
         )
 
-        self.layer2 = nn.Sequential(
-            nn.ConvTranspose2d(
-                image_size * 8,
-                image_size * 4,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            ),
-            nn.BatchNorm2d(image_size * 4),
-            nn.ReLU(inplace=True),
-        )
-
-        self.layer3 = nn.Sequential(
-            nn.ConvTranspose2d(
-                image_size * 4,
-                image_size * 2,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            ),
-            nn.BatchNorm2d(image_size * 2),
-            nn.ReLU(inplace=True),
-        )
-
-        self.layer4 = nn.Sequential(
-            nn.ConvTranspose2d(
-                image_size * 2,
-                image_size * 1,
-                kernel_size=4,
-                stride=2,
-                padding=1,
-                bias=False,
-            ),
-            nn.BatchNorm2d(image_size),
-            nn.ReLU(inplace=True),
-        )
-
-        self.last = nn.Sequential(
-            nn.ConvTranspose2d(
-                image_size, nc, kernel_size=4, stride=2, padding=1, bias=False
-            ),
-            nn.Tanh(),
-        )
-
-    def forward(self, z):
-        out = self.layer1(z)
-        out = self.layer2(out)
-        out = self.layer3(out)
-        out = self.layer4(out)
-        out = self.last(out)
-
-        return out
-
-
-def main():
-    # 動作確認
-
-    G = Generator(z_dim=20, image_size=64)
-
-    # 入力する乱数
-    input_z = torch.randn(1, 20)
-
-    # テンソルサイズを(1, 20, 1, 1)に変形
-    input_z = input_z.view(input_z.size(0), input_z.size(1), 1, 1)
-
-    # 偽画像を出力
-    fake_images = G(input_z)
-
-    img_transformed = fake_images[0].detach().numpy().transpose((1, 2, 0))
-    # img_transformed = img_transformed.transpose((1, 2, 0))
-    print(img_transformed.shape)
-    print(type(img_transformed))
-    plt.imshow(img_transformed)
-    plt.show()
-    plt.savefig("test")
-
-
-if __name__ == "__main__":
-    main()
+    def forward(self, input):
+        return self.main(input)
